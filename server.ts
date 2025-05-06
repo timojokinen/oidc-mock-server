@@ -22,5 +22,5 @@ try {
 app.use(oidcMockServerMiddleware({ ...config, issuer }));
 
 app.listen(port, () => {
-  console.log(`OIDC mock server running on port ${host}:${port}`);
+  console.log(`OIDC mock server running on ${host}:${port}`);
 });
