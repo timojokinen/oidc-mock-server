@@ -4,7 +4,7 @@ import fs from 'fs';
 
 const app = express();
 const port = process.env.PORT || 3000;
-const ISSUER = `http://localhost:${port}`;
+const ISSUER = process.env.ISSUER || `http://localhost:${port}`;
 
 const configFilePath = process.env.CONFIG_PATH || './server-config.json';
 let config: any;
