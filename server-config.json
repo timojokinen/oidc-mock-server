@@ -1,0 +1,30 @@
+{
+  "tokenExpiration": 3600,
+  "users": [
+    {
+      "sub": "user1",
+      "given_name": "John",
+      "family_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    {
+      "sub": "user2",
+      "given_name": "Jane",
+      "family_name": "Smith",
+      "email": "jane.smith@example.com"
+    },
+    {
+      "sub": "user3",
+      "given_name": "Alice",
+      "family_name": "Johnson",
+      "email": "alice.johnson@example.com"
+    }
+  ],
+  "baseClaims": {
+    "some_global_attr": "Hello world"
+  },
+  "scopes": {
+    "user_attributes": ["given_name", "family_name"],
+    "profile": ["email", "some_global_attr"]
+  }
+}
