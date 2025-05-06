@@ -1,5 +1,5 @@
 {
-  "name": "oidc-mock-server",
+  "name": "@timojokinen/oidc-mock-server",
   "version": "0.0.1",
   "description": "OIDC Server for mocking the oidc standard (authorization code) flow, compatible with the usual oidc client libraries",
   "main": "dist/index.js",
