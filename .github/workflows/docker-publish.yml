@@ -31,6 +31,7 @@ jobs:
             echo "tag=${{ github.ref_name }}" >> $GITHUB_ENV
           else
             echo "tag=latest" >> $GITHUB_ENV
+          fi
 
       # Build the Docker image
       - name: Build Docker image
