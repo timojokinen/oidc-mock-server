@@ -306,8 +306,6 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
       ...user,
     };
 
-    console.log(attributes);
-
     const requestedScopes = auth.scope.split(' ');
     const requestedClaims = requestedScopes.reduce<Record<string, unknown>>((acc, scope) => {
       const claims = scopes?.[scope];

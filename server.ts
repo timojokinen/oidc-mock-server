@@ -17,8 +17,6 @@ try {
   process.exit(1);
 }
 
-console.log({ ...config, issuer: ISSUER });
-
 app.use(oidcMockServerMiddleware({ ...config, issuer: ISSUER }));
 
 app.listen(port, () => {
