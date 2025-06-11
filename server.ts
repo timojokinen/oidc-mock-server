@@ -19,7 +19,15 @@ try {
   process.exit(1);
 }
 
-app.use(oidcMockServerMiddleware({ ...config, issuer }));
+const publicKey = process.env.PUBLIC_KEY_PEM;
+const privateKey = process.env.PRIVATE_KEY_PEM;
+
+const keys = typeof publicKey === 'string' && typeof privateKey === 'string' ? {
+  publicKey,
+  privateKey
+} : undefined;
+
+app.use(oidcMockServerMiddleware({ ...config, issuer, keys }));
 
 app.listen(port, () => {
   console.log(`OIDC mock server running on ${host}:${port}`);

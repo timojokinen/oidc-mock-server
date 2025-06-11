@@ -20,9 +20,16 @@ export type Options = {
     [key: string]: string[];
   };
   tokenExpiration?: number;
+  keys?: {
+    publicKey: string;
+    privateKey: string;
+  }
 };
 
 const KID = 'mock-key-id';
+
+// Basic PEM format regex (very permissive)
+const pemRegex = /-----BEGIN ([A-Z ]+)-----\r?\n([A-Za-z0-9+/=\r\n]+)-----END \1-----/;
 
 /**
  * Create JSON Web Key Set (JWKS) for the public key
@@ -35,9 +42,31 @@ function createJwks(publicKey: crypto.KeyObject): { keys: crypto.JsonWebKey[] } 
 }
 
 /**
- * Generate or load RSA key pair for signing tokens
+ * Creates crypto.KeyObject instances for public and private keys.
+ * If keys are provided, they are used; otherwise, a new key pair is generated and saved to disk.
+ * @param keys 
+ * @returns 
  */
-function loadOrCreateKeyPair(): { publicKey: crypto.KeyObject; privateKey: crypto.KeyObject } {
+function resolveKeyObjects(keys?: { publicKey: string; privateKey: string }): { publicKey: crypto.KeyObject; privateKey: crypto.KeyObject } {
+  if (!keys) {
+    return loadOrGenerateKeyPair();
+  }
+
+  const publicKey = crypto.createPublicKey({
+    key: keys.publicKey,
+    format: 'pem',
+  });
+  const privateKey = crypto.createPrivateKey({
+    key: keys.privateKey,
+    format: 'pem',
+  });
+  return { publicKey, privateKey };
+}
+
+/**
+ * Generate or load from disk RSA key pair for signing tokens
+ */
+function loadOrGenerateKeyPair(): { publicKey: crypto.KeyObject; privateKey: crypto.KeyObject } {
   const dir = path.resolve(__dirname, '.keys');
   const publicKeyPath = path.join(dir, 'public.pem');
   const privateKeyPath = path.join(dir, 'private.pem');
@@ -125,15 +154,15 @@ function signJwt(payload: object, privateKey: crypto.KeyObject, options: { algor
 function validateAuthQueryParams(payload: any):
   | false
   | {
-      client_id: string;
-      redirect_uri: string;
-      code_challenge: string;
-      code_challenge_method: string;
-      response_type: string;
-      state: string;
-      nonce: string;
-      scope: string;
-    } {
+    client_id: string;
+    redirect_uri: string;
+    code_challenge: string;
+    code_challenge_method: string;
+    response_type: string;
+    state: string;
+    nonce: string;
+    scope: string;
+  } {
   const { client_id, redirect_uri, code_challenge, code_challenge_method, response_type, state, nonce, scope } =
     payload;
   if (
@@ -161,13 +190,17 @@ function validateAuthQueryParams(payload: any):
   };
 }
 
-const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseClaims, scopes }: Options) => {
+const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseClaims, scopes, keys }: Options) => {
   try {
     z.object({
       issuer: z.string().url(),
       users: z.array(z.object({ sub: z.string() })),
       baseClaims: z.object({}).optional(),
       scopes: z.record(z.string(), z.array(z.string())).optional(),
+      keys: z.object({
+        publicKey: z.string().refine((val) => pemRegex.test(val), { message: 'Invalid public key PEM format' }),
+        privateKey: z.string().refine((val) => pemRegex.test(val), { message: 'Invalid private key PEM format' }),
+      }).optional(),
     }).parse({ issuer, users, baseClaims, scopes });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -178,7 +211,7 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
   }
 
   const router = express.Router();
-  const { publicKey, privateKey } = loadOrCreateKeyPair();
+  const { publicKey, privateKey } = resolveKeyObjects(keys);
   const jwks = createJwks(publicKey);
   const userSessions = new Set<string>();
   const authCodes = new Map<
