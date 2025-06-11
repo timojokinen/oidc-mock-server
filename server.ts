@@ -19,8 +19,8 @@ try {
   process.exit(1);
 }
 
-const publicKey = process.env.PUBLIC_KEY_PEM;
-const privateKey = process.env.PRIVATE_KEY_PEM;
+const publicKey = process.env.PUBLIC_KEY_PEM?.replace(/\\n/g, '\n');
+const privateKey = process.env.PRIVATE_KEY_PEM?.replace(/\\n/g, '\n');
 
 const keys = typeof publicKey === 'string' && typeof privateKey === 'string' ? {
   publicKey,
