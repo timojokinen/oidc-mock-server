@@ -421,6 +421,7 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
       token_endpoint: `${issuer}/oauth/token`,
       userinfo_endpoint: `${issuer}/userinfo`,
       jwks_uri: `${issuer}/token_keys`,
+      end_session_endpoint: `${issuer}/logout`,
       response_types_supported: ['code'],
       grant_types_supported: ['authorization_code'],
       subject_types_supported: ['public'],
@@ -434,6 +435,62 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
   router.get('/token_keys', (_, res) => {
     res.json(jwks);
   });
+
+  /**
+   * RP-Initiated Logout (End Session) endpoint
+   * Supports GET and POST. Parameters:
+   * - id_token_hint (optional): Used to identify the session subject (sub)
+   * - post_logout_redirect_uri (optional): Where to redirect after logout
+   * - state (optional): Opaque value to be included in the redirect
+   */
+  const endSessionHandler = (req: express.Request, res: express.Response): void => {
+    const method = req.method.toUpperCase();
+    const params = method === 'GET' ? (req.query as Record<string, any>) : (req.body as Record<string, any>);
+
+    const idTokenHint = typeof params.id_token_hint === 'string' ? params.id_token_hint : undefined;
+    const postLogoutRedirectUri = typeof params.post_logout_redirect_uri === 'string' ? params.post_logout_redirect_uri : undefined;
+    const state = typeof params.state === 'string' ? params.state : undefined;
+
+    // Best-effort session identification and cleanup
+    let sid = (req.cookies.sid as string | undefined) || undefined;
+    if (!sid && idTokenHint) {
+      try {
+        const { payload } = decodeJwt(idTokenHint);
+        if (payload && typeof payload.sub === 'string') {
+          sid = payload.sub;
+        }
+      } catch {
+        // Per RP-Initiated Logout, treat malformed id_token_hint as invalid request (simple handling)
+        res.status(400).json({ error: 'invalid_request', error_description: 'Invalid id_token_hint' });
+        return;
+      }
+    }
+
+    if (sid) {
+      userSessions.delete(sid);
+    }
+
+    // Clear the session cookie regardless
+    res.clearCookie('sid');
+
+    if (postLogoutRedirectUri) {
+      const url = new URL(postLogoutRedirectUri, postLogoutRedirectUri);
+      if (state) url.searchParams.set('state', state);
+      res.redirect(url.toString());
+      return;
+    }
+
+    // Fallback simple page
+    res.send(`
+      <div>
+        <h2>Logged out</h2>
+        <a href="/">Continue</a>
+      </div>
+    `);
+  };
+
+  router.get('/logout', endSessionHandler);
+  router.post('/logout', endSessionHandler);
 
   logger.log('OIDC mock server middleware initialized successfully');
 
