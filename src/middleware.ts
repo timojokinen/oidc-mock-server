@@ -259,6 +259,10 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
   router.use(express.json());
   router.use(cookieParser());
 
+  router.get('/users', (req, res) => {
+    res.json(users);
+  });
+
   router.get('/oauth/authorize', (req, res) => {
     const sid = req.cookies.sid as string | undefined;
     const hasSession = sid ? userSessions.has(sid) : false;
@@ -269,9 +273,10 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
       res.send(`
             <div style="display: flex; flex-direction: column; align-items: center; height: 100vh; justify-content: center;">
               <form method="POST" action="/login?${query}">
-                <input name="username" placeholder="Username" required />
+                <input name="username" placeholder="Username (sub)" required />
                 <button type="submit">Login</button>
               </form>
+              <a target="_blank" href="/users">View available users</a>
             </div>
           `);
       return;
