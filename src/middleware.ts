@@ -240,7 +240,7 @@ const oidcMockServerMiddleware = ({
     }).parse({ issuer, users, baseClaims, scopes });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const formattedErrors = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      const formattedErrors = error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
       throw new Error(`Invalid configuration: ${formattedErrors}`);
     }
     throw error;
