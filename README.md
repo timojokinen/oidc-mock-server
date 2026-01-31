@@ -319,7 +319,7 @@ Clears the session and optionally redirects to `post_logout_redirect_uri`.
 
 ### Prerequisites
 
-- Node.js v22+ (see `.nvmrc`)
+- Node.js v24+ (see `.nvmrc`)
 
 ### Setup and Run
 

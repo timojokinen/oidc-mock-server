@@ -7,7 +7,7 @@ esbuild
     platform: 'node', // Target Node.js environment
     outfile: 'dist/server.js', // Output file
     sourcemap: true, // Generate source maps
-    target: 'node22', // Specify the Node.js version
+    target: 'node24', // Specify the Node.js version
     external: ['express', 'cookie-parser'], // Mark dependencies as external
     format: 'cjs',
   })
