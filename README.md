@@ -49,8 +49,31 @@ A lightweight mock server for simulating OpenID Connect (OIDC) providers. Design
 
 ## Installation
 
-### Using npm
-Not currently available. I will be publishing this package to npmjs registry soon.
+### As an npm Package
+
+```bash
+npm install @timojokinen/oidc-mock-server
+```
+
+```typescript
+import express from 'express';
+import { oidcMockServerMiddleware } from '@timojokinen/oidc-mock-server';
+
+const app = express();
+
+app.use(oidcMockServerMiddleware({
+  issuer: 'http://localhost:3000',
+  users: [
+    { sub: 'user1', name: 'John Doe', email: 'john@example.com' },
+  ],
+  scopes: {
+    profile: ['name'],
+    email: ['email'],
+  },
+}));
+
+app.listen(3000);
+```
 
 ### Using Docker
 
