@@ -1,6 +1,6 @@
 {
   "name": "@timojokinen/oidc-mock-server",
-  "version": "0.0.1",
+  "version": "0.0.9",
   "description": "OIDC Server for mocking the oidc standard (authorization code) flow, compatible with the usual oidc client libraries",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,17 +15,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/cookie-parser": "1.4.8",
-    "esbuild": "0.25.2",
-    "express-openid-connect": "2.18.0",
-    "prettier": "3.5.3",
-    "rimraf": "6.0.1",
-    "tsx": "4.19.3",
-    "typescript": "5.8.3"
+    "@types/cookie-parser": "^1.4.10",
+    "esbuild": "^0.27.2",
+    "express-openid-connect": "^2.19.4",
+    "prettier": "3.8.1",
+    "rimraf": "6.1.2",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
   },
   "peerDependencies": {
     "cookie-parser": "^1.4.7",
-    "express": "^5.1.0",
-    "zod": "^3.24.4"
+    "express": "^5.2.1",
+    "zod": "^4.3.6"
   }
 }
