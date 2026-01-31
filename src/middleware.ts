@@ -34,12 +34,18 @@ const KID = 'mock-key-id';
 // Basic PEM format regex (very permissive)
 const pemRegex = /-----BEGIN ([A-Z ]+)-----\r?\n([A-Za-z0-9+/=\r\n]+)-----END \1-----/;
 
-
-
-const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseClaims, scopes, keys, logger = console }: Options) => {
+const oidcMockServerMiddleware = ({
+  issuer,
+  tokenExpiration = 3600,
+  users,
+  baseClaims,
+  scopes,
+  keys,
+  logger = console,
+}: Options) => {
   /**
-  * Create JSON Web Key Set (JWKS) for the public key
-  */
+   * Create JSON Web Key Set (JWKS) for the public key
+   */
   function createJwks(publicKey: crypto.KeyObject): { keys: crypto.JsonWebKey[] } {
     const publicJwk = publicKey.export({ format: 'jwk' });
     return {
@@ -50,10 +56,13 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
   /**
    * Creates crypto.KeyObject instances for public and private keys.
    * If keys are provided, they are used; otherwise, a new key pair is generated and saved to disk.
-   * @param keys 
-   * @returns 
+   * @param keys
+   * @returns
    */
-  function resolveKeyObjects(keys?: { publicKey: string; privateKey: string }): { publicKey: crypto.KeyObject; privateKey: crypto.KeyObject } {
+  function resolveKeyObjects(keys?: { publicKey: string; privateKey: string }): {
+    publicKey: crypto.KeyObject;
+    privateKey: crypto.KeyObject;
+  } {
     if (!keys) {
       logger.log('No keys provided in config, falling back to generating new key pair or loading from disk');
       return loadOrGenerateKeyPair();
@@ -173,21 +182,21 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
    * Validate the query parameters for the authorization request
    * This function checks if all required parameters are present and returns them in a structured format.
    * If any parameter is missing, it returns false.
-   * @param payload 
+   * @param payload
    * @returns Validated query parameters or false if validation fails
    */
   function validateAuthQueryParams(payload: any):
     | false
     | {
-      client_id: string;
-      redirect_uri: string;
-      code_challenge: string;
-      code_challenge_method: string;
-      response_type: string;
-      state: string;
-      nonce: string;
-      scope: string;
-    } {
+        client_id: string;
+        redirect_uri: string;
+        code_challenge: string;
+        code_challenge_method: string;
+        response_type: string;
+        state: string;
+        nonce: string;
+        scope: string;
+      } {
     const { client_id, redirect_uri, code_challenge, code_challenge_method, response_type, state, nonce, scope } =
       payload;
     if (
@@ -215,7 +224,6 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
     };
   }
 
-
   logger.log('Initializing OIDC mock server middleware');
   try {
     z.object({
@@ -223,17 +231,19 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
       users: z.array(z.object({ sub: z.string() })),
       baseClaims: z.object({}).optional(),
       scopes: z.record(z.string(), z.array(z.string())).optional(),
-      keys: z.object({
-        publicKey: z.string().refine((val) => pemRegex.test(val), { message: 'Invalid public key PEM format' }),
-        privateKey: z.string().refine((val) => pemRegex.test(val), { message: 'Invalid private key PEM format' }),
-      }).optional(),
+      keys: z
+        .object({
+          publicKey: z.string().refine(val => pemRegex.test(val), { message: 'Invalid public key PEM format' }),
+          privateKey: z.string().refine(val => pemRegex.test(val), { message: 'Invalid private key PEM format' }),
+        })
+        .optional(),
     }).parse({ issuer, users, baseClaims, scopes });
   } catch (error) {
     if (error instanceof z.ZodError) {
       const formattedErrors = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
       throw new Error(`Invalid configuration: ${formattedErrors}`);
     }
-    throw error; // Re-throw unexpected errors
+    throw error;
   }
 
   const router = express.Router();
@@ -273,7 +283,7 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
       res.send(`
             <div style="display: flex; flex-direction: column; align-items: center; height: 100vh; justify-content: center;">
               <form method="POST" action="/login?${query}">
-                <input name="username" placeholder="Username (sub)" required />
+                <input name="username" autofocus placeholder="Username (sub)" required />
                 <button type="submit">Login</button>
               </form>
               <a target="_blank" href="/users">View available users</a>
@@ -408,6 +418,7 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
         res.status(500).json({ error: `User with sub ${sub} does not exist.` });
         return;
       }
+      res.json({ ...baseClaims, ...user });
     } catch {
       res.status(401).json({ error: 'Invalid token' });
     }
@@ -448,7 +459,8 @@ const oidcMockServerMiddleware = ({ issuer, tokenExpiration = 3600, users, baseC
     const params = method === 'GET' ? (req.query as Record<string, any>) : (req.body as Record<string, any>);
 
     const idTokenHint = typeof params.id_token_hint === 'string' ? params.id_token_hint : undefined;
-    const postLogoutRedirectUri = typeof params.post_logout_redirect_uri === 'string' ? params.post_logout_redirect_uri : undefined;
+    const postLogoutRedirectUri =
+      typeof params.post_logout_redirect_uri === 'string' ? params.post_logout_redirect_uri : undefined;
     const state = typeof params.state === 'string' ? params.state : undefined;
 
     // Best-effort session identification and cleanup
